@@ -56,7 +56,7 @@ class Chain:
     def process_sentence(self, inp):
         if inp.startswith("!"):
             return
-        l1 = re.split(r'[\.!?]', inp)
+        l1 = re.split(r'[\.!?]\s', inp)
         for sentence in l1:
             tmp_l = sentence.split(' ')
             if len(tmp_l) <= 1:
@@ -149,7 +149,7 @@ def read_chain(filename = 'chain_data'):
 
 if __name__ == "__main__":
     ch = read_chain('chain_datadionissium')
-
     write_chain(ch, 'chain_datadionissium')
+
     print("done")
 

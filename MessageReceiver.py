@@ -48,6 +48,10 @@ class MessageReceiver(threading.Thread):
 
                 user = getUser(line)
                 message = getMessage(line)
+                try:
+                    print(user + ": " + message)
+                except:
+                    print('smh')
                 with self.queue_mutex:
                     self.msg_queue.append((user, message))
 

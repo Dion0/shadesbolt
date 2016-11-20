@@ -9,7 +9,7 @@ YOURFACE_CHANCE = 0.2
 logging.basicConfig(level=logging.INFO)
 
 DISCORD_CHAIN_FILE = 'chain_data_discord_fubz'
-MSG_TO_GEN = 30
+MSG_TO_GEN = 19
 counter = 0
 
 rude_responses = ['how about i slap your shit', 'up yours QuestionMark', 'http://puu.sh/rA91W/79f04a5452.png',
@@ -46,7 +46,6 @@ def on_message(message):
         return
 
     msg_lower = message.content.lower()
-
     #supreme
     if random.random() < 0.0001:
         yield from client.send_message(message.channel, PEPE)
@@ -69,6 +68,9 @@ def on_message(message):
         return
     if 'oh uh' == msg_lower or 'ohuh' == msg_lower or 'oh-uh' == msg_lower:
         yield from client.send_message(message.channel, rude_responses[random.randint(0, len(rude_responses) - 1)])
+        return
+    if 'thea-who?' == msg_lower:
+        yield from client.send_message(message.channel, "theano")
         return
     if msg_lower.startswith('.set') and author.name == 'dion':
         cmd = msg_lower.split(' ')
@@ -100,12 +102,12 @@ def on_message(message):
         print(counter)
         ch.process_sentence(msg)
         if (counter >= MSG_TO_GEN):
-            MSG_TO_GEN = 30
+            MSG_TO_GEN = 19
             if random.random() < 0.2:
                 MSG_TO_GEN = 10 + random.randint(1, 20)
             counter = 0
             to_send = ch.gen_sentence()
-            yield from client.send_message(message.channel, to_send)
+            yield from client.send_message(message.channel, to_send, tts=True)
             #print('sent: ' + to_send + '| to ' + message.channel)
             write_chain(ch, DISCORD_CHAIN_FILE)
 

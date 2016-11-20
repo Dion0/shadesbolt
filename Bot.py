@@ -3,13 +3,17 @@ from Config import HOST, PORT, PASS, NICK
 from Markov import *
 from TwitchUtil import *
 
-IGNORELIST = ['nightbot', 'fubzdj']
+IGNORELIST = ['nightbot', 'fubzdj', 'mikuia']
 
 # for fricking fricks (emojis)
 non_bmp_map = dict.fromkeys(range(0x10000, sys.maxunicode + 1), 0xfffd)
 
+class Gender:
+    def __init__(self, name):
+        self.g = name
+
 class Bot(threading.Thread):
-    def __init__(self, msg_mutex, command_queue, channel="dionissium", msg_to_gen = 10, can_chat = True, can_curse = False, is_logging = False):
+    def __init__(self, msg_mutex, command_queue, channel="dionissium", msg_to_gen = 20, can_chat = True, can_curse = False, is_logging = False):
         self.channel = channel
         self.is_logging = is_logging
         self.can_curse = can_curse
@@ -26,6 +30,7 @@ class Bot(threading.Thread):
         self.msg_counter = 0
         self.counter_mutex = threading.RLock()
         self.timer = Timer.Timer(self)
+        self.gender = Gender('Male')
 
         self.msg_receiver = None
 
