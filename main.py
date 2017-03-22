@@ -33,7 +33,7 @@ if __name__ == "__main__":
             print(inp)
             arg = inp.split(' ')
             if len(arg) == 1:
-                arg.append('12')
+                arg.append('50')
             tmp_bot = Bot(msg_mutex, com_q, arg[0], int(arg[1]))
             tmp_bot.start()
             bots.append(tmp_bot)

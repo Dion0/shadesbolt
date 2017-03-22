@@ -69,6 +69,18 @@ class Chain:
                 prev_st = st
             self.add_word(DEF_STR, prev_st)
 
+    def gen_response(self, inp):
+        assert isinstance(inp, str)
+        words = inp.split(' ')
+        print(words)
+        seed = random.choice(words)
+        print(seed)
+        ans = self.gen_sentence(seed)
+        print(ans)
+        return ans
+
+
+
     def gen_random_wd(self, key = DEF_STR):
         if not(key in self.words.keys()):
             return DEF_STR
@@ -80,17 +92,22 @@ class Chain:
                 return wd.st
         return "~"
 
-    def gen_sentence(self):
-        res = self.gen_random_wd()
-        next_w = res
+    def gen_sentence(self, key = DEF_STR):
+        if key != DEF_STR:
+            res = key + " "
+        else:
+            res = ""
+        next_w = self.gen_random_wd(key)
+        if next_w != DEF_STR:
+            res += next_w
         while next_w != DEF_STR:
             next_w = self.gen_random_wd(next_w)
             if (next_w != DEF_STR):
                 res += " " + next_w
         #print(res.translate(non_bmp_map))
-        if len(res) < 5:
+        while len(res.split(' ')) > 12:
             res = self.gen_sentence()
-        return res
+        return res.lstrip()
 
     def deb(self):
         for key in self.words.keys():
@@ -132,13 +149,13 @@ class Chain:
         return ch
             
 
-def write_chain(chn, filename = 'chain_data'):
+def write_chain(chn, filename = SAVE_PREFIX):
     chFile = open(filename, 'wb')
     pickle.dump(chn, chFile)
     chFile.close()
 
 
-def read_chain(filename = 'chain_data'):
+def read_chain(filename = SAVE_PREFIX):
     try:
         chFile = open(filename, 'rb')
         chn = pickle.load(chFile)
@@ -148,8 +165,10 @@ def read_chain(filename = 'chain_data'):
     return chn
 
 if __name__ == "__main__":
-    ch = read_chain('chain_datadionissium')
-    write_chain(ch, 'chain_datadionissium')
+    ch = read_chain('chain_dataeladdifficult')
+    #write_chain(ch, 'chain_datadionissium')
+    sen = ch.gen_sentence('not')
+    print(sen)
 
     print("done")
 

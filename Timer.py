@@ -1,7 +1,7 @@
 import time, threading
 
 class Timer(threading.Thread):
-    def __init__(self, bot, sleep_time = 1500):
+    def __init__(self, bot, sleep_time = 15000):
         self.bot = bot
         self.sleep_time = sleep_time
         self.running = True

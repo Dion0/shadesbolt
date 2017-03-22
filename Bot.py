@@ -1,9 +1,17 @@
-import threading, socket, sys, time, StrUtil, Timer, CommandQueue, MessageReceiver
+import threading, socket, sys, time, StrUtil, Timer, CommandQueue, MessageReceiver, re
 from Config import HOST, PORT, PASS, NICK
 from Markov import *
 from TwitchUtil import *
 
-IGNORELIST = ['nightbot', 'fubzdj', 'mikuia']
+IGNORELIST = ['nightbot', 'fubzdj', 'mikuia', 'moobot', 'twitchnotify', 'hairclubbot']
+UCHLIST = ['barbedwire', 'linearsaw', 'stairs', 'ice', 'spring', 'teleporter', 'ferriswheel', 'Lgirder',
+           'arrowshooter', 'treadmill', 'tennisballshooter', 'barrel', 'fanplatform', 'magnetplatform',
+           'hockeyshooter', 'blackhole', 'spinningdeath', 'tire', 'coin', 'door', 'haybale', 'hydrant',
+           'honey', 'movingplatform', 'bomb', 'punchingplant', 'spikeball', 'megabomb', 'minibomb',
+           'i wonder if you are trying to trick me 🤔', 'how about no :)', "i'm feeling sleepy ( -ᴗ-)"]
+RESPONSE_CHANCE = 0.3
+RESPONSE_TIMEOUT = 120
+RESPONSE_LAST = -RESPONSE_TIMEOUT
 
 # for fricking fricks (emojis)
 non_bmp_map = dict.fromkeys(range(0x10000, sys.maxunicode + 1), 0xfffd)
@@ -13,7 +21,7 @@ class Gender:
         self.g = name
 
 class Bot(threading.Thread):
-    def __init__(self, msg_mutex, command_queue, channel="dionissium", msg_to_gen = 20, can_chat = True, can_curse = False, is_logging = False):
+    def __init__(self, msg_mutex, command_queue, channel="dionissium", msg_to_gen = 35, can_chat = True, can_curse = False, is_logging = False):
         self.channel = channel
         self.is_logging = is_logging
         self.can_curse = can_curse
@@ -36,6 +44,8 @@ class Bot(threading.Thread):
 
         self.running = False
 
+        self.msg_str = ""
+
         threading.Thread.__init__(self)
 
     def openSocket(self):
@@ -47,11 +57,12 @@ class Bot(threading.Thread):
         return s
 
     def sendMessage(self, msg):
-        t_str = "PRIVMSG #{0} :{1}\r\n".format(self.channel, msg)
-        with self.msg_mutex:
-            self.socket.send(t_str.encode("utf-8"))
-            time.sleep(1.5)
-        print(t_str)
+        if self.can_chat:
+            t_str = "PRIVMSG #{0} :{1}\r\n".format(self.channel, msg)
+            with self.msg_mutex:
+                self.socket.send(t_str.encode("utf-8"))
+                time.sleep(1.5)
+            print(t_str)
 
     def processCmd(self, cmd):
         pass
@@ -62,7 +73,7 @@ class Bot(threading.Thread):
         self.running = True
         self.msg_receiver = MessageReceiver.MessageReceiver(self.socket, self.msg_mutex)
 
-        chain = read_chain(SAVE_PREFIX + self.channel)
+        chain = self.chain = read_chain(SAVE_PREFIX + self.channel)
         self.msg_counter = 0
         self.msg_override = False
         self.timer.start()
@@ -96,20 +107,49 @@ class Bot(threading.Thread):
 
             while (self.msg_receiver.hasMessage()):
                 user, message = self.msg_receiver.getMessage()
+
                 if user.lower() in IGNORELIST:
                     continue
                 message, isvalid = StrUtil.sanitizeMessage(message, self.can_curse)
-                if message.startswith('bot pls'):
+                self.msg_str += message + "\n"
+                if re.search(r'!shades off', message, re.IGNORECASE) and user.lower() == self.channel:
+                    self.sendMessage('( -ᴗ-)')
+                    self.can_chat = False
+                if re.search(r'!shades on', message, re.IGNORECASE) and user.lower() == self.channel:
+                    self.can_chat = True
+                    self.sendMessage('( •ᴗ•)')
+
+                if re.search(r'!bet', message, re.IGNORECASE):
+                    if random.random() < 0.1:
+                        self.sendMessage('incnone wins, stop')
+                if re.search(r'@shadesbolt', message, re.IGNORECASE):
+                    if re.search(r'vote', message, re.IGNORECASE):
+                        self.sendMessage(random.choice(UCHLIST))
+                    else:
+                        message = re.sub('@shadesbolt', '', message, flags=re.IGNORECASE).strip()
+                        tmp = time.clock()
+                        global RESPONSE_LAST
+                        if tmp - RESPONSE_LAST >= RESPONSE_TIMEOUT:
+                            self.sendMessage('@' + user + ' ' + self.chain.gen_response(message))
+                            RESPONSE_LAST = tmp
+
+
+                pls_response = re.search(r'^(shadesbolt|shades|bolt|bot)\spls', message, re.IGNORECASE)
+                if pls_response:
                     self.sendMessage(user + ' pls')
-                #print(user + ": " + message)
+
                 if isvalid:
                     chain.process_sentence(message)
-
                     with self.counter_mutex:
                         self.msg_counter += 1
 
+
             with self.counter_mutex:
                 if self.msg_counter >= self.msg_to_gen:
+                    with open("logs/" + self.channel + '.txt', 'a', encoding="utf-8") as flog:
+                        flog.write(self.msg_str)
+                        self.msg_str = ""
+                    print(self.msg_str)
                     if self.msg_override:
                             self.msg_override = False
                     else:
